@@ -37,7 +37,7 @@ if (!process.env.TOKEN) {
 client.login(process.env.TOKEN);
 
 // Configurações
-const CANAL_TEXTO_ID = "1360720462518157514";
+const CANAL_TEXTO_ID = "1405017147909865602";
 const VOICE_CHANNELS = [
   "1377710109115027547",
   "1377712406574268536",
@@ -63,7 +63,7 @@ client.once("ready", () => {
     const embed = new EmbedBuilder()
       .setColor("#FFEC00")
       .setDescription(
-        `<:verified:1405172419827732530> **Bot online!** pronto para monitorar, registrar e divulgar \conexões de membros nos canais de voz do servidor!`
+        `<:verified:1405172419827732530> **Bot online!** pronto para monitorar, registrar e divulgar \nconexões de membros nos canais de voz do servidor!`
       );
     canalTexto.send({ embeds: [embed] });
   }
