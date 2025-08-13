@@ -29,8 +29,12 @@ const client = new Client({
   ],
 });
 
-// 🔹 Login direto com token (não recomendado para público!)
-client.login("MTM5OTg3NDU2OTU3MzI0MDk5Mw.GWTf3G.JWzdkMcl4JRzp-eP4FcG29qnSTci92Mb_MDtE4");
+// 🔹 Login via variável de ambiente
+if (!process.env.TOKEN) {
+  console.error("❌ ERRO: A variável de ambiente TOKEN não foi definida.");
+  process.exit(1);
+}
+client.login(process.env.TOKEN);
 
 // Configurações
 const CANAL_TEXTO_ID = "1360720462518157514";
