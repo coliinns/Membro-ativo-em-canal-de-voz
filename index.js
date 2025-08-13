@@ -37,7 +37,7 @@ if (!process.env.TOKEN) {
 client.login(process.env.TOKEN);
 
 // Configurações
-const CANAL_TEXTO_ID = "1405017147909865602";
+const CANAL_TEXTO_ID = "1360720462518157514";
 const VOICE_CHANNELS = [
   "1377710109115027547",
   "1377712406574268536",
