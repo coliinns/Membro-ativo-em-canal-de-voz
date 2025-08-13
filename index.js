@@ -63,7 +63,7 @@ client.once("ready", () => {
     const embed = new EmbedBuilder()
       .setColor("#FFEC00")
       .setDescription(
-        `<:verified:1405172419827732530> **Bot online!** pronto para monitorar, registrar e divulgar /nconexões de membros nos canais de voz do servidor!`
+        `<:verified:1405172419827732530> **Bot online!** pronto para monitorar, registrar e divulgar \conexões de membros nos canais de voz do servidor!`
       );
     canalTexto.send({ embeds: [embed] });
   }
