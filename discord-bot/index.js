@@ -30,7 +30,7 @@ const client = new Client({
 });
 
 // 🔹 Login direto com token (não recomendado para público!)
-client.login("MTM5OTg3NDU2OTU3MzI0MDk5Mw.GWTf3G.JWzdkMcl4JRzp-eP4FcG29qnSTci92Mb_MDtE4");
+client.login("MTQwNTUyOTk5MjAxNTkwODk0NQ.GlxEh6.1RgKw_lo88BQ5bmT7WMh-Vj4JifsjpkXHV6mlI");
 
 // Configurações
 const CANAL_TEXTO_ID = "1360720462518157514";
