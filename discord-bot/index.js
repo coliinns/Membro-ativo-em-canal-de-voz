@@ -1,4 +1,7 @@
-// Importações
+// =========================
+// index.js
+// =========================
+require("dotenv").config(); // Carrega variáveis de ambiente do .env
 const express = require("express");
 const { Client, GatewayIntentBits, EmbedBuilder } = require("discord.js");
 
@@ -36,7 +39,7 @@ if (!process.env.TOKEN) {
 }
 client.login(process.env.TOKEN);
 
-// Configurações
+// Configurações do canal
 const CANAL_TEXTO_ID = "1360720462518157514";
 const VOICE_CHANNELS = [
   "1377710109115027547",
@@ -65,52 +68,53 @@ client.once("ready", () => {
       .setDescription(
         `<:verified:1405172419827732530> **Bot online!** pronto para monitorar, registrar e divulgar \nconexões de membros nos canais de voz do servidor!`
       );
-    canalTexto.send({ embeds: [embed] });
+    canalTexto.send({ embeds: [embed] }).catch(console.error);
   }
 });
 
-// Entrada e saída de voz (corrigido)
+// Entrada e saída de voz
 client.on("voiceStateUpdate", (oldState, newState) => {
-  const memberId = newState.member.id;
+  const memberId = newState.member?.id;
+  if (!memberId) return;
+
   const entrouEmCanalMonitorado = VOICE_CHANNELS.includes(newState.channelId);
   const saiuDeCanalMonitorado = VOICE_CHANNELS.includes(oldState.channelId);
 
   const now = Date.now();
   const lastTime = lastAnnounceTime.get(memberId) || 0;
 
-  // ✅ Entrada ou troca para canal monitorado
+  // Entrada ou troca para canal monitorado
   if (entrouEmCanalMonitorado && (!saiuDeCanalMonitorado || oldState.channelId !== newState.channelId)) {
     if (now - lastTime >= COOLDOWN_MS) {
       const canalTexto = newState.guild.channels.cache.get(CANAL_TEXTO_ID);
-      if (canalTexto) {
-        const avatarURL = newState.member.user.displayAvatarURL({ size: 512, dynamic: true });
-        const nickLength = newState.member.user.username.length;
-        const espacos = gerarEspacosProporcionais(nickLength);
+      if (!canalTexto) return console.warn("Canal de texto não encontrado");
 
-        const embed = new EmbedBuilder()
-          .setColor("#FFEC00")
-          .setDescription(
-            `<a:ansflash13:1405160790419443762> <@${memberId}> **está ativo no canal** <#${newState.channelId}>\n${espacos}Junte-se para ser ajudado ou farmar dinheiro em equipe. <a:moneybag:1405178051935076392>`
-          )
-          .setThumbnail(avatarURL);
+      const avatarURL = newState.member.user.displayAvatarURL({ size: 512, dynamic: true });
+      const nickLength = newState.member.user.username.length;
+      const espacos = gerarEspacosProporcionais(nickLength);
 
-        canalTexto.send({ embeds: [embed] }).then((msg) => {
-          userMessages.set(memberId, msg);
-        });
+      const embed = new EmbedBuilder()
+        .setColor("#FFEC00")
+        .setDescription(
+          `<a:ansflash13:1405160790419443762> <@${memberId}> **está ativo no canal** <#${newState.channelId}>\n${espacos}Junte-se para ser ajudado ou farmar dinheiro em equipe. <a:moneybag:1405178051935076392>`
+        )
+        .setThumbnail(avatarURL);
 
-        lastAnnounceTime.set(memberId, now);
-      }
+      canalTexto.send({ embeds: [embed] })
+        .then((msg) => userMessages.set(memberId, msg))
+        .catch((err) => console.error("Erro ao enviar mensagem:", err));
+
+      lastAnnounceTime.set(memberId, now);
+      console.log(`[INFO] Mensagem enviada para ${newState.member.user.tag} no canal ${newState.channelId}`);
     }
   }
 
-  // ✅ Saída de canal monitorado
+  // Saída de canal monitorado
   if (saiuDeCanalMonitorado && !entrouEmCanalMonitorado) {
     const msg = userMessages.get(memberId);
-    if (msg) {
-      msg.delete().catch(() => {});
-      userMessages.delete(memberId);
-    }
-    // Libera cooldown para poder anunciar de novo na próxima entrada
+    if (msg) msg.delete().catch(() => {});
+    userMessages.delete(memberId);
     lastAnnounceTime.delete(memberId);
+    console.log(`[INFO] ${newState.member.user.tag} saiu do canal monitorado.`);
   }
 });
