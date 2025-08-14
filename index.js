@@ -34,7 +34,11 @@ if (!process.env.TOKEN) {
   console.error("❌ ERRO: A variável de ambiente TOKEN não foi definida.");
   process.exit(1);
 }
-client.login(process.env.TOKEN);
+
+// Log de sucesso/falha no login
+client.login(process.env.TOKEN)
+  .then(() => console.log("✅ Login do bot realizado com sucesso!"))
+  .catch(err => console.error("❌ Falha ao logar o bot:", err));
 
 // Configurações
 const CANAL_TEXTO_ID = "1360720462518157514";
@@ -69,7 +73,7 @@ client.once("ready", () => {
   }
 });
 
-// Entrada e saída de voz (corrigido)
+// Entrada e saída de voz
 client.on("voiceStateUpdate", (oldState, newState) => {
   const memberId = newState.member.id;
   const entrouEmCanalMonitorado = VOICE_CHANNELS.includes(newState.channelId);
