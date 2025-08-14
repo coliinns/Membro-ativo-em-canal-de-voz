@@ -69,48 +69,48 @@ client.once("ready", () => {
   }
 });
 
-// Entrada e saída de voz
+// Entrada e saída de voz (corrigido)
 client.on("voiceStateUpdate", (oldState, newState) => {
   const memberId = newState.member.id;
+  const entrouEmCanalMonitorado = VOICE_CHANNELS.includes(newState.channelId);
+  const saiuDeCanalMonitorado = VOICE_CHANNELS.includes(oldState.channelId);
 
-  // Entrada
-  if (!oldState.channelId && newState.channelId) {
-    if (VOICE_CHANNELS.includes(newState.channelId)) {
-      const now = Date.now();
-      const lastTime = lastAnnounceTime.get(memberId) || 0;
+  const now = Date.now();
+  const lastTime = lastAnnounceTime.get(memberId) || 0;
 
-      if (now - lastTime >= COOLDOWN_MS) {
-        const canalTexto = newState.guild.channels.cache.get(CANAL_TEXTO_ID);
-        if (canalTexto) {
-          const avatarURL = newState.member.user.displayAvatarURL({ size: 512, dynamic: true });
-          const nickLength = newState.member.user.username.length;
-          const espacos = gerarEspacosProporcionais(nickLength);
+  // ✅ Entrada ou troca para canal monitorado
+  if (entrouEmCanalMonitorado && (!saiuDeCanalMonitorado || oldState.channelId !== newState.channelId)) {
+    if (now - lastTime >= COOLDOWN_MS) {
+      const canalTexto = newState.guild.channels.cache.get(CANAL_TEXTO_ID);
+      if (canalTexto) {
+        const avatarURL = newState.member.user.displayAvatarURL({ size: 512, dynamic: true });
+        const nickLength = newState.member.user.username.length;
+        const espacos = gerarEspacosProporcionais(nickLength);
 
-          const embed = new EmbedBuilder()
-            .setColor("#FFEC00")
-            .setDescription(
-              `<a:ansflash13:1405160790419443762> <@${memberId}> **está ativo no canal** <#${newState.channelId}>\n${espacos}Junte-se para ser ajudado ou farmar dinheiro em equipe. <a:moneybag:1405178051935076392>`
-            )
-            .setThumbnail(avatarURL);
+        const embed = new EmbedBuilder()
+          .setColor("#FFEC00")
+          .setDescription(
+            `<a:ansflash13:1405160790419443762> <@${memberId}> **está ativo no canal** <#${newState.channelId}>\n${espacos}Junte-se para ser ajudado ou farmar dinheiro em equipe. <a:moneybag:1405178051935076392>`
+          )
+          .setThumbnail(avatarURL);
 
-          canalTexto.send({ embeds: [embed] }).then((msg) => {
-            userMessages.set(memberId, msg);
-          });
+        canalTexto.send({ embeds: [embed] }).then((msg) => {
+          userMessages.set(memberId, msg);
+        });
 
-          lastAnnounceTime.set(memberId, now);
-        }
+        lastAnnounceTime.set(memberId, now);
       }
     }
   }
 
-  // Saída
-  if (oldState.channelId && !newState.channelId) {
-    if (VOICE_CHANNELS.includes(oldState.channelId)) {
-      const msg = userMessages.get(memberId);
-      if (msg) {
-        msg.delete().catch(() => {});
-        userMessages.delete(memberId);
-      }
+  // ✅ Saída de canal monitorado
+  if (saiuDeCanalMonitorado && !entrouEmCanalMonitorado) {
+    const msg = userMessages.get(memberId);
+    if (msg) {
+      msg.delete().catch(() => {});
+      userMessages.delete(memberId);
     }
+    // Libera cooldown para poder anunciar de novo na próxima entrada
+    lastAnnounceTime.delete(memberId);
   }
 });
