@@ -56,6 +56,95 @@ function gerarEspacosProporcionais(nickLength) {
 }
 
 // Quando o bot iniciar
+client.once("clientReady", async () => {
+  console.log(`✅ Bot conectado como ${client.user.tag}`);
+  try {
+    const canalTexto = await client.channels.fetch(CANAL_TEXTO_ID);
+    if (canalTexto) {
+      const embed = new EmbedBuilder()
+        .setColor("#FFEC00")
+        .setDescription(
+          `<:verified:1405172419827732530> **Bot online!** pronto para monitorar, registrar e divulgar \nconexões de membros nos canais de voz do servidor!`
+        );
+      canalTexto.send({ embeds: [embed] });
+    }
+  } catch (err) {
+    console.error("❌ Erro ao buscar o canal de texto:", err.message);
+  }
+});
+
+// Entrada e saída de voz
+client.on("voiceStateUpdate", async (oldState, newState) => {
+  const memberId = newState.member.id;
+  const entrouEmCanalMonitorado = VOICE_CHANNELS.includes(newState.channelId);
+  const saiuDeCanalMonitorado = VOICE_CHANNELS.includes(oldState.channelId);
+
+  const now = Date.now();
+  const lastTime = lastAnnounceTime.get(memberId) || 0;
+
+  // ✅ Entrou OU trocou de canal monitorado
+  if (entrouEmCanalMonitorado && newState.channelId !== oldState.channelId) {
+    if (now - lastTime >= COOLDOWN_MS) {
+      try {
+        const canalTexto = await newState.guild.channels.fetch(CANAL_TEXTO_ID);
+        if (canalTexto) {
+          const avatarURL = newState.member.user.displayAvatarURL({
+            size: 512,
+            dynamic: true,
+          });
+          const nickLength = newState.member.user.username.length;
+          const espacos = gerarEspacosProporcionais(nickLength);
+
+          const embed = new EmbedBuilder()
+            .setColor("#FFEC00")
+            .setDescription(
+              `<a:ansflash13:1405160790419443762> <@${memberId}> **está ativo no canal** <#${newState.channelId}>\n${espacos}Junte-se para ser ajudado ou farmar dinheiro em equipe. <a:moneybag:1405178051935076392>`
+            )
+            .setThumbnail(avatarURL);
+
+          const msg = await canalTexto.send({ embeds: [embed] });
+          userMessages.set(memberId, msg);
+
+          lastAnnounceTime.set(memberId, now);
+        }
+      } catch (err) {
+        console.error("❌ Erro ao anunciar entrada:", err.message);
+      }
+    }
+  }
+
+  // ✅ Saiu de canal monitorado
+  if (saiuDeCanalMonitorado && !entrouEmCanalMonitorado) {
+    const msg = userMessages.get(memberId);
+    if (msg) {
+      msg.delete().catch(() => {});
+      userMessages.delete(memberId);
+    }
+    // Libera cooldown para nova entrada
+    lastAnnounceTime.delete(memberId);
+  }
+});client.login(process.env.TOKEN);
+
+// Configurações
+const CANAL_TEXTO_ID = "1360720462518157514";
+const VOICE_CHANNELS = [
+  "1377710109115027547",
+  "1377712406574268536",
+  "1377712449674809587",
+  "1377712615366725773",
+];
+
+const lastAnnounceTime = new Map();
+const userMessages = new Map();
+const COOLDOWN_MS = 5 * 60 * 1000; // 5 minutos
+
+function gerarEspacosProporcionais(nickLength) {
+  const multiplicador = 1.2;
+  const qtdEspacos = Math.max(0, Math.floor((20 - nickLength) * multiplicador));
+  return "\u200B".repeat(qtdEspacos);
+}
+
+// Quando o bot iniciar
 client.once("ready", () => {
   console.log(`✅ Bot conectado como ${client.user.tag}`);
   const canalTexto = client.channels.cache.get(CANAL_TEXTO_ID);
