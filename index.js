@@ -57,7 +57,7 @@ return "\u200B".repeat(qtdEspacos);
 
 // Quando o bot iniciar
 client.once("ready", () => {
-console.log(✅ Bot conectado como ${client.user.tag});
+console.log(`✅ Bot conectado como ${client.user.tag}`);
 const canalTexto = client.channels.cache.get(CANAL_TEXTO_ID);
 if (canalTexto) {
 const embed = new EmbedBuilder()
